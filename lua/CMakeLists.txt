@@ -24,40 +24,45 @@ add_definitions(-DTOLUA_RELEASE)
 
 # NOTE: Don't chain options in IFs here, their dependency is already handled by
 # ConkyBuildOptions.cmake
+# 合併 xlib 到 libcairo.so，需要將 cairo_xlib.pkg 內容抄進 cairo.pkg。
 if(BUILD_LUA_CAIRO)
-  include_directories(${luacairo_includes} ${CMAKE_CURRENT_SOURCE_DIR})
+  include_directories(${luacairo_includes} ${luacairoxlib_includes} ${CMAKE_CURRENT_SOURCE_DIR})
 
   # cairo_set_dash() needs this special hack to work properly if you have a
   # better solution, please let me know
   wrap_tolua(luacairo_src cairo.pkg libcairo.patch)
 
+  # Need the directory for -lSM
+  get_filename_component(X11_SM_LIB_PATH ${X11_SM_LIB} DIRECTORY)
+  link_directories(${X11_SM_LIB_PATH})
+
   add_library(conky-cairo MODULE ${luacairo_src})
   set_target_properties(conky-cairo PROPERTIES OUTPUT_NAME "cairo")
 
-  target_link_libraries(conky-cairo ${luacairo_libs} toluapp_lib_static)
+  target_link_libraries(conky-cairo ${luacairo_libs} ${luacairoxlib_libs} toluapp_lib_static)
   set(lua_libs ${lua_libs} conky-cairo)
 
   print_target_properties(conky-cairo)
 endif(BUILD_LUA_CAIRO)
 
 if(BUILD_LUA_CAIRO_XLIB)
-  include_directories(${luacairoxlib_includes} ${CMAKE_CURRENT_SOURCE_DIR})
+  #include_directories(${luacairoxlib_includes} ${CMAKE_CURRENT_SOURCE_DIR})
 
   # Need the directory for -lSM
-  get_filename_component(X11_SM_LIB_PATH ${X11_SM_LIB} DIRECTORY)
-  link_directories(${X11_SM_LIB_PATH})
-  wrap_tolua(luacairoxlib_src cairo_xlib.pkg)
+  #get_filename_component(X11_SM_LIB_PATH ${X11_SM_LIB} DIRECTORY)
+  #link_directories(${X11_SM_LIB_PATH})
+  #wrap_tolua(luacairoxlib_src cairo_xlib.pkg)
 
-  add_library(conky-cairo_xlib MODULE ${luacairoxlib_src})
-  set_target_properties(conky-cairo_xlib PROPERTIES OUTPUT_NAME "cairo_xlib")
+  #add_library(conky-cairo_xlib MODULE ${luacairoxlib_src})
+  #set_target_properties(conky-cairo_xlib PROPERTIES OUTPUT_NAME "cairo_xlib")
 
-  target_link_libraries(conky-cairo_xlib
-    ${luacairoxlib_libs}
-    ${luacairo_libs}
-    toluapp_lib_static)
-  set(lua_libs ${lua_libs} conky-cairo_xlib)
+  #target_link_libraries(conky-cairo_xlib
+  #  ${luacairoxlib_libs}
+  #  ${luacairo_libs}
+  #  toluapp_lib_static)
+  #set(lua_libs ${lua_libs} conky-cairo_xlib)
 
-  print_target_properties(conky-cairo_xlib)
+  #print_target_properties(conky-cairo_xlib)
 endif(BUILD_LUA_CAIRO_XLIB)
 
 if(BUILD_LUA_IMLIB2)
